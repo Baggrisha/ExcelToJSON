@@ -15,14 +15,13 @@ else:
 # Класс для поиска данных в Excel файлах
 class ExcelSearcher:
     def __init__(self, files):
-        # Список Excel файлов
         self.files = files
-        self.dfs = []  # Список DataFrame для каждого листа
-        self.dfs_name = []  # Список названий листов
-        self.load_files()  # Загружаем файлы при инициализации
+        self.dfs = []
+        self.dfs_name = []
+        self.load_files()
 
     def load_files(self):
-        """Загрузка всех выбранных Excel файлов и листов"""
+        """Загрузка всех листов из выбранных Excel файлов"""
         self.dfs.clear()
         self.dfs_name.clear()
         for file_name in self.files:
@@ -30,28 +29,26 @@ class ExcelSearcher:
                 excel_file = pd.ExcelFile(file_name)
                 for sheet_name in excel_file.sheet_names:
                     df_sheet = pd.read_excel(excel_file, sheet_name=sheet_name)
-                    df_sheet.columns = df_sheet.columns.astype(str).str.strip()  # Очистка названий колонок
+                    df_sheet.columns = df_sheet.columns.astype(str).str.strip()
                     self.dfs.append(df_sheet)
                     self.dfs_name.append(sheet_name)
             except Exception as e:
                 print(f"Ошибка загрузки {file_name}: {e}")
 
     def generate_variations(self, word):
-        """Генерация вариантов слова (регистры, английская раскладка)"""
+        """Генерация вариаций слова для поиска (регистр и транслит)"""
         variants = set()
         variants.add(word.lower())
         variants.add(word.upper())
         variants.add(word.capitalize())
-        # Преобразование русских букв в английские по клавиатуре
         eng_map = str.maketrans("фисвуапршолдьтщзйкыегмцчня", "abcdefghijklmnopqrstuvwxyz")
         variants.add(word.lower().translate(eng_map))
         return list(variants)
 
-    def search_word(self, word):
-        """Поиск по слову во всех листах"""
+    def search_word(self, word, include_sheets=False):
+        """Поиск слова по всем листам"""
         variants = self.generate_variations(word)
         results = {}
-
         for sheet_name, df in zip(self.dfs_name, self.dfs):
             found_values = []
             for col in df.columns:
@@ -59,74 +56,81 @@ class ExcelSearcher:
                     if any(v in val for v in variants):
                         found_values.append(val)
             if found_values:
-                results[sheet_name] = found_values
-
-        total_found = sum(len(v) for v in results.values())
+                if include_sheets:
+                    results.setdefault(word, {}).setdefault(sheet_name, []).extend(found_values)
+                else:
+                    results.setdefault(word, []).extend(found_values)
+        total_found = sum(
+            len(v) if isinstance(v, list) else sum(len(x) for x in v.values())
+            for v in results.values()
+        )
         return results, total_found
 
-    def search_column(self, column_name):
-        """Поиск по названию столбца"""
+    def search_column(self, column_name, include_sheets=False):
+        """Поиск по столбцу по имени"""
         result = {}
         column_name_lower = column_name.lower()
-        for df in self.dfs:
+        for sheet_name, df in zip(self.dfs_name, self.dfs):
             matching_cols = [col for col in df.columns if column_name_lower in col.lower()]
             for col in matching_cols:
                 for val in df[col].dropna():
-                    result.setdefault(col, []).append(val)
-
-        total_found = sum(len(v) for v in result.values())
+                    if include_sheets:
+                        result.setdefault(sheet_name, {}).setdefault(col, []).append(val)
+                    else:
+                        result.setdefault(col, []).append(val)
+        total_found = sum(
+            len(v) if isinstance(v, list) else sum(len(x) for x in v.values())
+            for v in result.values()
+        )
         return result, total_found
 
-    def search_column_by_index(self, column_index):
-        """Поиск по индексу столбца"""
+    def search_column_by_index(self, column_index, include_sheets=False):
+        """Поиск по столбцу по индексу"""
         result = {}
-        for df in self.dfs:
+        for sheet_name, df in zip(self.dfs_name, self.dfs):
             try:
                 col = df.iloc[:, int(column_index)]
                 col_name = df.columns[int(column_index)]
                 for val in col.dropna():
-                    result.setdefault(col_name, []).append(val)
+                    if include_sheets:
+                        result.setdefault(sheet_name, {}).setdefault(col_name, []).append(val)
+                    else:
+                        result.setdefault(col_name, []).append(val)
             except (ValueError, IndexError):
                 continue
-
-        total_found = sum(len(v) for v in result.values())
+        total_found = sum(
+            len(v) if isinstance(v, list) else sum(len(x) for x in v.values())
+            for v in result.values()
+        )
         return result, total_found
 
-    def search_rows(self, word):
-        """Поиск по строкам с ключевым словом"""
+    def search_rows(self, word, include_sheets=False):
+        """Поиск по строкам"""
         variants = self.generate_variations(word)
-        result = {str(word): []}
-        for df in self.dfs:
-            for idx, row in df.iterrows():
+        result = {}
+        for sheet_name, df in zip(self.dfs_name, self.dfs):
+            found_rows = []
+            for _, row in df.iterrows():
                 row_str = '; '.join(row.astype(str).tolist())
                 if any(v in row_str for v in variants):
-                    result[str(word)].append(row_str)
-
-        total_found = sum(len(v) for v in result.values())
+                    found_rows.append(row_str)
+            if found_rows:
+                if include_sheets:
+                    result.setdefault(word, {}).setdefault(sheet_name, []).extend(found_rows)
+                else:
+                    result.setdefault(word, []).extend(found_rows)
+        total_found = sum(
+            len(v) if isinstance(v, list) else sum(len(x) for x in v.values())
+            for v in result.values()
+        )
         return result, total_found
 
-    def search_rows_by_index(self, row_index):
-        """Поиск строки по индексу"""
-        result = {str(row_index): []}
-        for df in self.dfs:
-            try:
-                if str(row_index) in df.index.astype(str):
-                    idx_match = df.index[df.index.astype(str) == str(row_index)][0]
-                    row = df.loc[idx_match]
-                    row_str = '; '.join(row.astype(str).tolist())
-                    result[str(row_index)].append(row_str)
-            except Exception:
-                continue
-
-        total_found = sum(len(v) for v in result.values())
-        return result, total_found
-
-    def search_two_columns(self, key_col, value_col):
-        """Поиск по двум столбцам: ключ-значение"""
+    def search_two_columns(self, key_col, value_col, include_sheets=False):
+        """Поиск по двум столбцам (ключ-значение), учитываем include_sheets"""
+        result = {}
         key_col_lower = key_col.lower()
         value_col_lower = value_col.lower()
-        result = {}
-        for df in self.dfs:
+        for sheet_name, df in zip(self.dfs_name, self.dfs):
             matching_keys = [col for col in df.columns if key_col_lower in col.lower()]
             matching_values = [col for col in df.columns if value_col_lower in col.lower()]
             for k_col in matching_keys:
@@ -134,48 +138,61 @@ class ExcelSearcher:
                     for k, v in zip(df[k_col].astype(str), df[v_col].astype(str)):
                         k_val = k if k and k != "nan" else "NaN"
                         v_val = v if v and v != "nan" else "NaN"
-                        result.setdefault(k_val, []).append(v_val)
-
-        total_found = sum(len(v) for v in result.values())
+                        if include_sheets:
+                            result.setdefault(sheet_name, {}).setdefault(k_val, []).append(v_val)
+                        else:
+                            result.setdefault(k_val, []).append(v_val)
+        total_found = sum(
+            len(v) if isinstance(v, list) else sum(len(x) for x in v.values())
+            for v in result.values()
+        )
         return result, total_found
 
-    def search_two_columns_by_index(self, key_col_index, value_col_index):
-        """Поиск ключ-значение по индексам столбцов"""
+    def search_two_columns_by_index(self, key_col_index, value_col_index, include_sheets=False):
+        """Поиск по двум столбцам по индексам (ключ-значение), учитываем include_sheets"""
         result = {}
-        for df in self.dfs:
+        for sheet_name, df in zip(self.dfs_name, self.dfs):
             try:
                 k_col = df.iloc[:, int(key_col_index)]
                 v_col = df.iloc[:, int(value_col_index)]
                 for k, v in zip(k_col.astype(str), v_col.astype(str)):
                     k_val = k if k and k != "nan" else "NaN"
                     v_val = v if v and v != "nan" else "NaN"
-                    result.setdefault(k_val, []).append(v_val)
+                    if include_sheets:
+                        result.setdefault(sheet_name, {}).setdefault(k_val, []).append(v_val)
+                    else:
+                        result.setdefault(k_val, []).append(v_val)
             except (ValueError, IndexError):
                 continue
-
-        total_found = sum(len(v) for v in result.values())
+        total_found = sum(
+            len(v) if isinstance(v, list) else sum(len(x) for x in v.values())
+            for v in result.values()
+        )
         return result, total_found
 
-    def get_all_data(self):
-        """Извлечение всех данных из всех файлов"""
+    def get_all_data(self, include_sheets=False):
+        """Получить все данные из всех листов"""
         result = {}
-        for df in self.dfs:
+        for sheet_name, df in zip(self.dfs_name, self.dfs):
             for col in df.columns:
-                result.setdefault(col, []).extend(df[col].dropna().tolist())
-
-        total_found = sum(len(v) for v in result.values())
+                if include_sheets:
+                    result.setdefault(sheet_name, {}).setdefault(col, []).extend(df[col].dropna().tolist())
+                else:
+                    result.setdefault(col, []).extend(df[col].dropna().tolist())
+        total_found = sum(
+            len(v) if isinstance(v, list) else sum(len(x) for x in v.values())
+            for v in result.values()
+        )
         return result, total_found
 
 
-# Tkinter Frame для GUI приложения Excel → JSON
 class ExcelToJsonFrame(tk.Frame):
     def __init__(self, master, *args, **kwargs):
         super().__init__(master, *args, **kwargs)
-
-        self.language = "ru"  # Язык интерфейса
-        self.selected_files = []  # Выбранные Excel файлы
-        self.save_folder = ""  # Папка для сохранения JSON
-        self.searcher = None  # Экземпляр ExcelSearcher
+        self.language = "ru"
+        self.selected_files = []
+        self.save_folder = ""
+        self.searcher = None
 
         # Тексты интерфейса
         self.texts = {
@@ -190,6 +207,7 @@ class ExcelToJsonFrame(tk.Frame):
                 "lang_btn": "EN",
                 "save_info": "Выбрано место сохранения:\n",
                 "mode_label": "Выберите режим:",
+                "checkbox_label": "Включать имена листов",
                 "modes": [
                     "🔍 Поиск по слову",
                     "🧱 Достать весь текст из столбцов",
@@ -225,6 +243,7 @@ class ExcelToJsonFrame(tk.Frame):
                 "lang_btn": "RU",
                 "save_info": "Selected save path:\n",
                 "mode_label": "Select mode:",
+                "checkbox_label": "Include sheet names",
                 "modes": [
                     "🔍 Search by word",
                     "🧱 Extract all text from columns",
@@ -251,11 +270,10 @@ class ExcelToJsonFrame(tk.Frame):
             }
         }
 
-        # 1. Кнопка выбора Excel
+        # Кнопки выбора Excel файлов
         self.select_excel_btn = Button(self, text=self.t("select_excel"), command=self.load_excel, bg="#87CEFA")
         self.select_excel_btn.pack(pady=(10, 5))
 
-        # 2. Список выбранных файлов
         files_frame = tk.Frame(self)
         files_frame.pack(pady=(0, 10))
         self.file_listbox = Listbox(files_frame, width=60, height=4, selectmode=tk.SINGLE)
@@ -265,17 +283,27 @@ class ExcelToJsonFrame(tk.Frame):
         self.delete_all_btn = Button(files_frame, text=self.t("delete_all"), command=self.clear_all, bg="#FFB6C1")
         self.delete_all_btn.grid(row=1, column=1, padx=5, pady=5, sticky="w")
 
-        # 3. Выбор режима
+        # Выбор режима поиска
         mode_frame = tk.Frame(self)
-        mode_frame.pack(pady=(5, 10))
+        mode_frame.pack(pady=(5, 5))
         self.mode_label = tk.Label(mode_frame, text=self.t("mode_label"), font=("Segoe UI", 10, "bold"))
         self.mode_label.pack()
         self.selected_mode = tk.StringVar(value=self.t("modes")[0])
         self.mode_menu = tk.OptionMenu(mode_frame, self.selected_mode, *self.t("modes"), command=self.toggle_second_input)
         self.mode_menu.config(width=40, font=("Segoe UI", 10))
-        self.mode_menu.pack(pady=(3, 8))
+        self.mode_menu.pack(pady=(3, 5))
 
-        # 4. Поля ввода
+        # ✅ Чекбокс включения имени листа в JSON
+        self.include_sheet_names = tk.BooleanVar(value=False)
+        self.checkbox_include = tk.Checkbutton(
+            self,
+            text=self.t("checkbox_label"),
+            variable=self.include_sheet_names,
+            font=("Segoe UI", 10)
+        )
+        self.checkbox_include.pack(pady=(0, 10))
+
+        # Поля ввода ключа и данных
         input_frame = tk.Frame(self)
         input_frame.pack(pady=(0, 15))
         self.input_label = tk.Label(input_frame, text=self.t("input_label"), font=("Segoe UI", 10, "bold"))
@@ -287,45 +315,38 @@ class ExcelToJsonFrame(tk.Frame):
         self.input_var2 = tk.StringVar()
         self.input_entry2 = tk.Entry(input_frame, textvariable=self.input_var2, width=20, font=("Segoe UI", 11))
 
-        # 5. Кнопки
+        # Кнопки поиска и сохранения
         self.search_btn = Button(self, text=self.t("search"), command=self.search_action, bg="#90EE90")
         self.search_btn.pack(pady=(5, 10))
-
         self.select_folder_btn = Button(self, text=self.t("select_folder"), command=self.select_folder, bg="#FFD700")
         self.select_folder_btn.pack(pady=(0, 5))
         self.save_path_var = tk.StringVar(value=self.t("no_path"))
         self.save_label = tk.Label(self, textvariable=self.save_path_var, font=("Segoe UI", 9), fg="gray")
         self.save_label.pack(pady=(0, 15))
-
         self.save_btn = Button(self, text=self.t("save_json"), command=self.save_json, bg="#FFA500")
         self.save_btn.pack(pady=(0, 10))
-
         self.lang_btn = Button(self, text=self.t("lang_btn"), command=self.switch_language, bg="#D8BFD8")
         self.lang_btn.pack(pady=(0, 10))
 
     def toggle_second_input(self, mode=None):
-        """
-        Управляет отображением второго поля ввода
-        — показывается только при режимах 'По двум столбцам' и 'По двум столбцам index'
-        """
+        """Показываем/скрываем второе поле ввода для двух столбцов"""
         if mode is None:
             mode = self.selected_mode.get()
-
         two_column_modes = [
-            "🔑 По двум столбцам",
-            "🆔 По двум столбцам index",
-            "🔑 By two columns",
-            "🆔 By two columns index"
+            "🔑 По двум столбцам", "🆔 По двум столбцам index",
+            "🔑 By two columns", "🆔 By two columns index"
         ]
-
         if mode in two_column_modes:
-            # показываем оба поля
             self.input_label.grid(row=0, column=0, padx=5)
             self.input_entry.grid(row=0, column=1, padx=5)
             self.input_label2.grid(row=0, column=2, padx=5)
             self.input_entry2.grid(row=0, column=3, padx=5)
+        elif mode in ["📦 Сохранить все данные", "📦 Save all data"]:
+            self.input_label.grid_forget()
+            self.input_entry.grid_forget()
+            self.input_label2.grid_forget()
+            self.input_entry2.grid_forget()
         else:
-            # показываем только одно
             self.input_label.grid(row=0, column=0, padx=5)
             self.input_entry.grid(row=0, column=1, padx=5)
             self.input_label2.grid_forget()
@@ -335,10 +356,12 @@ class ExcelToJsonFrame(tk.Frame):
         return self.texts[self.language][key]
 
     def switch_language(self):
+        """Переключение языка интерфейса"""
         self.language = "en" if self.language == "ru" else "ru"
         self.update_texts()
 
     def update_texts(self):
+        """Обновление всех текстов интерфейса при смене языка"""
         self.select_excel_btn.config(text=self.t("select_excel"))
         self.delete_selected_btn.config(text=self.t("delete_selected"))
         self.delete_all_btn.config(text=self.t("delete_all"))
@@ -349,27 +372,20 @@ class ExcelToJsonFrame(tk.Frame):
         self.mode_label.config(text=self.t("mode_label"))
         self.input_label.config(text=self.t("input_label"))
         self.input_label2.config(text=self.t("input_label_2"))
+        self.checkbox_include.config(text=self.t("checkbox_label"))
 
-        # обновляем выпадающее меню режимов
         menu = self.mode_menu["menu"]
         menu.delete(0, "end")
         for mode in self.t("modes"):
-            menu.add_command(label=mode,
-                             command=lambda m=mode: [self.selected_mode.set(m), self.toggle_second_input(m)])
-
+            menu.add_command(label=mode, command=lambda m=mode: [self.selected_mode.set(m), self.toggle_second_input(m)])
         current_mode = self.selected_mode.get()
         if current_mode not in self.t("modes"):
             current_mode = self.t("modes")[0]
             self.selected_mode.set(current_mode)
-
-        # ✅ обновляем отображение второго поля ввода
         self.toggle_second_input(current_mode)
-
-        # ✅ обновляем текст под надписью пути
-        if not self.save_folder:  # если путь ещё не выбран
+        if not self.save_folder:
             self.save_path_var.set(self.t("no_path"))
         else:
-            # если путь выбран, показываем ту же надпись, но с новым переводом
             self.save_path_var.set(f"{self.t('save_info')}{self.save_folder}")
 
     def load_excel(self):
@@ -408,136 +424,99 @@ class ExcelToJsonFrame(tk.Frame):
         if not self.searcher:
             messagebox.showwarning("Warning", self.t("msg_no_files"))
             return
-
         mode = self.selected_mode.get()
         query = self.input_var.get().strip()
         query2 = self.input_var2.get().strip()
+        include_sheets = self.include_sheet_names.get()
 
-        # 🔍 Поиск по слову
         if mode in ["🔍 Поиск по слову", "🔍 Search by word"]:
-            results, total_found = self.searcher.search_word(query)
+            results, total_found = self.searcher.search_word(query, include_sheets)
             messagebox.showinfo("Result", self.t("msg_found_count").format(total_found))
-
-        # 🧱 Достать весь текст из столбцов
         elif mode in ["🧱 Достать весь текст из столбцов", "🧱 Extract all text from columns"]:
             if not query:
                 messagebox.showwarning("Warning", self.t("msg_enter_column"))
                 return
-            results, total_found = self.searcher.search_column(query)
+            results, total_found = self.searcher.search_column(query, include_sheets)
             messagebox.showinfo("Result", self.t("msg_found_column").format(total_found))
-
-        # 🆔 Достать весь текст из столбцов index
         elif mode in ["🆔 Достать весь текст из столбцов index", "🆔 Extract all text from columns index"]:
             if not query:
                 messagebox.showwarning("Warning", self.t("msg_enter_column_by_index"))
                 return
-            results, total_found = self.searcher.search_column_by_index(query)
+            results, total_found = self.searcher.search_column_by_index(query, include_sheets)
             messagebox.showinfo("Result", self.t("msg_found_column").format(total_found))
-
-        # 📏 Достать весь текст из строк
         elif mode in ["📏 Достать весь текст из строк", "📏 Extract all text from rows"]:
-            results, total_found = self.searcher.search_rows(query)
+            results, total_found = self.searcher.search_rows(query, include_sheets)
             messagebox.showinfo("Result", self.t("msg_found_rows").format(total_found))
-
-        # 🆔 Достать весь текст из строк index
         elif mode in ["🆔 Достать весь текст из строк index", "🆔 Extract all text from rows index"]:
             if not query.isdigit():
                 messagebox.showwarning("Warning", "Введите числовой индекс строки")
                 return
-            results, total_found = self.searcher.search_rows_by_index(int(query))
+            results, total_found = self.searcher.search_rows_by_index(int(query), include_sheets)
             messagebox.showinfo("Result", self.t("msg_found_rows_by_index").format(total_found))
-
-        # 🔑 По двум столбцам
         elif mode in ["🔑 По двум столбцам", "🔑 By two columns"]:
             if not query or not query2:
                 messagebox.showwarning("Warning", self.t("msg_enter_column"))
                 return
-            results, total_found = self.searcher.search_two_columns(query, query2)
+            results, total_found = self.searcher.search_two_columns(query, query2, include_sheets)
             messagebox.showinfo("Result", f"Найдено ключ-значений: {total_found}")
-
-        # 🆔 По двум столбцам index
         elif mode in ["🆔 По двум столбцам index", "🆔 By two columns index"]:
             if not query or not query2:
                 messagebox.showwarning("Warning", self.t("msg_enter_column_by_index"))
                 return
-            results, total_found = self.searcher.search_two_columns_by_index(query, query2)
+            results, total_found = self.searcher.search_two_columns_by_index(query, query2, include_sheets)
             messagebox.showinfo("Result", f"Найдено ключ-значений: {total_found}")
-
-        # 📦 Сохранить все данные
         elif mode in ["📦 Сохранить все данные", "📦 Save all data"]:
-            results, total_found = self.searcher.get_all_data()
+            results, total_found = self.searcher.get_all_data(include_sheets)
             messagebox.showinfo("Result", self.t("msg_found_all").format(total_found))
-
         else:
             messagebox.showinfo("Info", self.t("msg_save_info"))
-            return
 
     def save_json(self):
         if not self.searcher:
             messagebox.showwarning("Warning", self.t("msg_no_files"))
             return
-
         if not self.save_folder:
             messagebox.showwarning("Warning", self.t("msg_save_error"))
             return
-
         mode = self.selected_mode.get()
         query = self.input_var.get().strip()
         query2 = self.input_var2.get().strip()
-        data_to_save = {}
+        include_sheets = self.include_sheet_names.get()
 
-        # 🔍 Поиск по слову
         if mode in ["🔍 Поиск по слову", "🔍 Search by word"]:
-            data_to_save = {query: self.searcher.search_word(query)}
-
-        # 🧱 Поиск по названию столбца
+            results, _ = self.searcher.search_word(query, include_sheets)
         elif mode in ["🧱 Достать весь текст из столбцов", "🧱 Extract all text from columns"]:
-            data_to_save = self.searcher.search_column(query)
-
-        # 🆔 Поиск по индексу столбца
+            results, _ = self.searcher.search_column(query, include_sheets)
         elif mode in ["🆔 Достать весь текст из столбцов index", "🆔 Extract all text from columns index"]:
-            data_to_save = self.searcher.search_column_by_index(query)
-
-        # 📏 Поиск по строкам
+            results, _ = self.searcher.search_column_by_index(query, include_sheets)
         elif mode in ["📏 Достать весь текст из строк", "📏 Extract all text from rows"]:
-            data_to_save = {"rows": self.searcher.search_rows(query)}
-
-        # 🆔 Поиск строк по индексу
+            results, _ = self.searcher.search_rows(query, include_sheets)
         elif mode in ["🆔 Достать весь текст из строк index", "🆔 Extract all text from rows index"]:
             if not query.isdigit():
                 messagebox.showwarning("Warning", "Введите числовой индекс строки")
                 return
-            data_to_save = {"rows": self.searcher.search_rows_by_index(int(query))}
-
-        # 🔑 По двум столбцам
+            results, _ = self.searcher.search_rows_by_index(int(query), include_sheets)
         elif mode in ["🔑 По двум столбцам", "🔑 By two columns"]:
-            data_to_save = self.searcher.search_two_columns(query, query2)
-
-        # 🆔 По двум столбцам index
+            results, _ = self.searcher.search_two_columns(query, query2, include_sheets)
         elif mode in ["🆔 По двум столбцам index", "🆔 By two columns index"]:
-            data_to_save = self.searcher.search_two_columns_by_index(query, query2)
-
-        # 📦 Сохранить всё
+            results, _ = self.searcher.search_two_columns_by_index(query, query2, include_sheets)
         elif mode in ["📦 Сохранить все данные", "📦 Save all data"]:
-            data_to_save = self.searcher.get_all_data()
-
+            results, _ = self.searcher.get_all_data(include_sheets)
         else:
             messagebox.showinfo("Info", self.t("msg_save_info"))
             return
 
-        # 💾 Сохранение результата
         for file in self.selected_files:
             base_name = os.path.splitext(os.path.basename(file))[0]
             save_path = os.path.join(self.save_folder, f"{base_name}.json")
             with open(save_path, "w", encoding="utf-8") as f:
-                json.dump(data_to_save, f, ensure_ascii=False, indent=2)
-
+                json.dump(results, f, ensure_ascii=False, indent=2)
         messagebox.showinfo("Saved", self.t("msg_saved"))
 
-# Запуск функции
+
 if __name__ == "__main__":
     root = tk.Tk()
-    root.title("Excel → JSON Converter")
+    root.title("XLStoJSON")
     try:
         pil_image = Image.open('ico.png')
         icon = ImageTk.PhotoImage(pil_image)
