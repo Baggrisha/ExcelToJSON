@@ -1,6 +1,4 @@
 
----
-
 # RU
 ## • [🇺🇸 EN](#EN)
 
@@ -8,13 +6,13 @@
 
 <div align="center">
 
-![Python](https://img.shields.io/badge/Python-3.7+-blue?style=for-the-badge\&logo=python)
+![Python](https://img.shields.io/badge/Python-3.7+-blue?style=for-the-badge&logo=python)
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 ![GUI](https://img.shields.io/badge/GUI-Tkinter-orange?style=for-the-badge)
 
 **Профессиональный инструмент для поиска и извлечения данных из Excel файлов с возможностью сохранения результатов в JSON**
 
-[🚀 Быстрый старт](#-быстрый-старт) • [📋 Возможности](#-возможности) • [💻 Установка](#-установка) • [🎯 Использование](#-использование) • [🇺🇸 EN](#EN)
+[🚀 Быстрый старт](#-быстрый-старт) • [📦 Скачать релиз](https://github.com/baggrisha/ExcelToJSON/releases/latest) • [📋 Возможности](#-возможности) • [💻 Установка](#-установка) • [🎯 Использование](#-использование) • [🇺🇸 EN](#EN)
 
 </div>
 
@@ -24,13 +22,38 @@
 
 ### ✨ Основные функции
 
-* **🖥️ Графический интерфейс** – Удобный GUI на Tkinter
-* **📦 Пакетная обработка Excel** – Одновременная работа с несколькими файлами
-* **🔍 Поиск по содержимому** – По словам, столбцам и строкам
-* **📊 Сохранение результатов** – Экспорт в формат JSON
-* **🎨 Гибкие режимы поиска** – По названиям/индексам столбцов и строк, по двум колонкам
+* **🖥️ Графический интерфейс** – Удобный GUI на Tkinter  
+* **📦 Пакетная обработка Excel** – Одновременная работа с несколькими файлами  
+* **🔍 Поиск по содержимому** – По словам, столбцам и строкам  
+* **📊 Сохранение результатов** – Экспорт в формат JSON  
+* **🎨 Гибкие режимы поиска** – По названиям/индексам столбцов и строк, по двум колонкам  
 
-### 📝 Поддерживаемые режимы
+---
+
+## 🚀 Быстрый старт
+
+> 💾 **Готовые сборки для macOS и Windows:**  
+> [⬇️ Скачать последнюю версию →](https://github.com/baggrisha/ExcelToJSON/releases/latest)
+
+---
+
+### Установка из исходников
+
+```bash
+# 1. Клонируйте репозиторий
+git clone https://github.com/baggrisha/ExcelToJSON.git
+cd ExcelToJSON
+
+# 2. Установите зависимости
+pip install -r requirements.txt
+
+# 3. Запустите программу
+python XLStoJSON.py
+````
+
+---
+
+## 📝 Поддерживаемые режимы
 
 | Режим                                    | Описание                                                |
 | ---------------------------------------- | ------------------------------------------------------- |
@@ -45,31 +68,6 @@
 
 ---
 
-## 🚀 Быстрый старт
-
-### Установка
-
-```bash
-# 1. Клонируйте репозиторий
-git clone https://github.com/baggrisha/ExcelToJSON.git
-cd ExcelToJSON
-
-# 2. Установите зависимости
-pip install -r requirements.txt
-
-# 3. Запустите программу
-python excel_to_json_converter.py
-```
-
-### Windows (Быстрый запуск)
-
-Для Windows пользователей доступен батник `run_converter.bat` (локально):
-
-1. Дважды кликните по `run_converter.bat`
-2. Программа автоматически установит зависимости и откроется
-
----
-
 ## 💻 Установка
 
 ### Требования
@@ -77,52 +75,41 @@ python excel_to_json_converter.py
 * **Python 3.7+**
 * **pandas**
 * **openpyxl**
+* **tkmacosx**
 * **tkinter** (входит в стандартную поставку Python)
-
-### Установка зависимостей
-
-```bash
-# Автоматическая установка
-pip install -r requirements.txt
-
-# Или вручную
-pip install pandas openpyxl
-```
 
 ---
 
 ## 🎯 Использование
 
-### Пошаговая инструкция
-
 1. **Запустите программу**
 
    ```bash
-   python excel_to_json_converter.py
+   python XLStoJSON.py
    ```
 
 2. **Выберите Excel файлы**
 
    * Нажмите **"Выбрать Excel"**
-   * Выберите один или несколько `.xls/.xlsx` файлов
+   * Укажите один или несколько `.xls/.xlsx` файлов
 
-3. **Выберите режим поиска**
+3. **Выберите режим**
 
-   * Выберите нужный режим из выпадающего меню (по слову, столбцу, строке и т.д.)
+   * Из выпадающего списка выберите нужный режим (по слову, по строкам и т.д.)
 
-4. **Укажите ключ или индекс**
+4. **Введите ключ или индекс**
 
-   * Введите слово или индекс строки/столбца в поле ввода
-   * При необходимости используйте второе поле для режима "по двум столбцам"
+   * Укажите слово или номер строки/столбца
+   * Для режима "по двум столбцам" используйте оба поля
 
-5. **Поиск и просмотр результатов**
+5. **Поиск и результаты**
 
-   * Нажмите **"Поиск"**, программа покажет количество найденных совпадений
+   * Нажмите **"Поиск"**, программа покажет количество совпадений
 
-6. **Сохранение в JSON**
+6. **Сохранение**
 
-   * Нажмите **"Выбрать место для сохранения"** и укажите директорию
-   * Нажмите **"Сохранить в JSON"**, файлы будут созданы с соответствующими именами
+   * Укажите папку для сохранения
+   * Нажмите **"Сохранить в JSON"**
 
 ---
 
@@ -167,46 +154,73 @@ ExcelToJSON/
 
 ## ⚙️ Технические детали
 
-### Форматирование по умолчанию
-
 * **JSON**: UTF-8
-* **Структура**: ключи — листы или значения столбцов, массивы — данные
-* **Поиск**: поддерживаются вариации слова (нижний/верхний регистр, транслит)
-
-### Поддерживаемые форматы
-
-* **Входные**: `.xls`, `.xlsx`
-* **Выходные**: `.json`
+* **Поддерживаемые форматы**: `.xls`, `.xlsx`
+* **Выходной формат**: `.json`
+* **Регистр**: не имеет значения (поиск нечувствителен к регистру)
 
 ---
 
 ## 🔧 Решение проблем
 
-### Частые вопросы
+### ❓ Программа не запускается
 
-**Q: Программа не запускается**
+Проверьте, что установлены зависимости:
 
 ```bash
-python --version
-pip install pandas openpyxl
+python3 -m pip install pandas openpyxl pillow
 ```
 
-**Q: Не сохраняется JSON**
+### ❓ Не сохраняется JSON
 
-* Проверьте, выбрана ли папка для сохранения
+Убедитесь, что выбрана папка для сохранения.
 
-**Q: Ошибка при открытии Excel**
+### ❓ Ошибка при открытии Excel
 
-* Проверьте, что файл не поврежден и поддерживается форматом `.xls/.xlsx`
-
-### Логи и отладка
-
-* Программа выводит сообщения об ошибках через интерфейс Tkinter
+Проверьте, что файл не повреждён и имеет расширение `.xls` или `.xlsx`.
 
 ---
 
+### ⚠️ Ошибка:
+
+```
+Traceback (most recent call last):
+  File "XLStoJSON.py", line 5, in <module>
+ModuleNotFoundError: No module named 'pandas'
+```
+
+#### **Причина:**
+
+Не установлены библиотеки (`pandas`, `openpyxl`, `pillow`)
+или PyInstaller не включил их в `.app` при сборке.
+
+#### **Решение:**
+
+##### 🧩 Если запускаете `.py`:
+
+```bash
+pip install pandas openpyxl pillow
+```
+
+##### 🍏 Если запускаете `.app` (скомпилированную версию):
+
+Пересоберите приложение с зависимостями:
+
+```bash
+pyinstaller --onedir --windowed \
+  --hidden-import pandas \
+  --hidden-import tkmacosx \
+  --hidden-import openpyxl \
+  --hidden-import pillow \
+  --icon=ico.png --clean XLStoJSON.py
+```
+
+После пересборки новая `.app` в папке `dist` будет работать на любом Mac.
+
+---
 # EN
-## •[🇷🇺 RU](#RU)
+
+## • [🇷🇺 RU](#RU)
 
 # 📄 Excel → JSON Converter
 
@@ -218,7 +232,7 @@ pip install pandas openpyxl
 
 **Professional tool for searching and extracting data from Excel files with JSON export**
 
-[🚀 Quick Start](#-quick-start) • [📋 Features](#-features) • [💻 Installation](#-installation) • [🎯 Usage](#-usage) • [🇷🇺 RU](#RU)
+[🚀 Quick Start](#-quick-start) • [📦 Download Release](https://github.com/baggrisha/ExcelToJSON/releases/latest) • [📋 Features](#-features) • [💻 Installation](#-installation) • [🎯 Usage](#-usage) • [🇷🇺 RU](#RU)
 
 </div>
 
@@ -226,15 +240,38 @@ pip install pandas openpyxl
 
 ## 🎯 Features
 
-### ✨ Main Functions
-
-* **🖥️ Graphical Interface** – Convenient GUI using Tkinter
-* **📦 Batch Excel Processing** – Work with multiple files at once
+* **🖥️ Graphical Interface** – Tkinter-based GUI
+* **📦 Batch Excel Processing** – Process multiple files simultaneously
 * **🔍 Content Search** – By word, column, or row
-* **📊 Save Results** – Export to JSON format
-* **🎨 Flexible Modes** – By name/index of columns/rows, two-column pairs
+* **📊 Save Results** – Export results to JSON
+* **🎨 Flexible Modes** – Search by names/indexes or column pairs
 
-### 📝 Supported Modes
+---
+
+## 🚀 Quick Start
+
+> 💾 **Prebuilt apps for macOS and Windows:**
+> [⬇️ Download latest release →](https://github.com/baggrisha/ExcelToJSON/releases/latest)
+
+---
+
+### Installation from source
+
+```bash
+# 1. Clone repository
+git clone https://github.com/baggrisha/ExcelToJSON.git
+cd ExcelToJSON
+
+# 2. Install dependencies
+pip install -r requirements.txt
+
+# 3. Run program
+python XLStoJSON.py
+```
+
+---
+
+## 📝 Supported Modes
 
 | Mode                            | Description                                     |
 | ------------------------------- | ----------------------------------------------- |
@@ -249,29 +286,6 @@ pip install pandas openpyxl
 
 ---
 
-## 🚀 Quick Start
-
-### Installation
-
-```bash
-# 1. Clone repository
-git clone https://github.com/baggrisha/ExcelToJSON.git
-cd ExcelToJSON
-
-# 2. Install dependencies
-pip install -r requirements.txt
-
-# 3. Run program
-python excel_to_json_converter.py
-```
-
-### Windows (Quick Launch)
-
-1. Double-click `run_converter.bat`
-2. Dependencies will be installed automatically, program will start
-
----
-
 ## 💻 Installation
 
 ### Requirements
@@ -279,56 +293,39 @@ python excel_to_json_converter.py
 * **Python 3.7+**
 * **pandas**
 * **openpyxl**
+* **tkmacosx**
 * **tkinter** (included with Python)
-
-### Install Dependencies
-
-```bash
-# Automatic
-pip install -r requirements.txt
-
-# Or manually
-pip install pandas openpyxl
-```
 
 ---
 
 ## 🎯 Usage
 
-### Step-by-step guide
-
 1. **Run program**
 
    ```bash
-   python excel_to_json_converter.py
+   python XLStoJSON.py
    ```
-
 2. **Select Excel files**
 
    * Click **"Select Excel"**
    * Choose one or more `.xls/.xlsx` files
-
 3. **Select mode**
 
    * Choose search/extract mode from dropdown menu
-
 4. **Enter key or index**
 
    * Input word or row/column index
-   * For two-column modes, use second input
-
+   * For two-column modes, use both fields
 5. **Search and view results**
 
-   * Click **"Search"** to see the number of matches
-
+   * Click **"Search"** to display match count
 6. **Save to JSON**
 
-   * Click **"Select save folder"**
-   * Click **"Save to JSON"**, files will be created with corresponding names
+   * Choose save folder → click **"Save to JSON"**
 
 ---
 
-## 📋 Usage Examples
+## 📋 Examples
 
 #### Search by word
 
@@ -358,52 +355,71 @@ Result: JSON with all Excel content
 
 ```
 ExcelToJSON/
-├── 📄 excel_to_json_gui.py      # Main GUI script
-├── 📋 requirements.txt          # Dependencies
-├── 📖 README.md                 # Documentation (this file)
-├── 📄 INSTRUCTION.txt           # Quick guide
-└── 🚀 run_converter.bat         # Quick launcher for Windows (local)
+├── 📄 excel_to_json_gui.py
+├── 📋 requirements.txt
+├── 📖 README.md
+├── 📄 INSTRUCTION.txt
+└── 🚀 run_converter.bat
 ```
 
 ---
 
 ## ⚙️ Technical Details
 
-### Default Formatting
-
 * **JSON**: UTF-8
-* **Structure**: keys — sheets or column names, arrays — data
-* **Search**: supports word variations (lowercase/uppercase/translit)
-
-### Supported Formats
-
-* **Input**: `.xls`, `.xlsx`
-* **Output**: `.json`
+* **Input formats**: `.xls`, `.xlsx`
+* **Output format**: `.json`
+* **Case-insensitive search**
 
 ---
 
 ## 🔧 Troubleshooting
 
-### Common Issues
+### ❓ Program doesn’t start
 
-**Q: Program doesn’t start**
+Install dependencies:
 
 ```bash
-python --version
-pip install pandas openpyxl
+pip install pandas openpyxl pillow
 ```
 
-**Q: JSON not saved**
+### ❓ JSON not saved
 
-* Make sure a save folder is selected
-
-**Q: Excel file cannot open**
-
-* Verify file is `.xls/.xlsx` and not corrupted
-
-### Logs and Debugging
-
-* Program displays detailed error messages via Tkinter interface
+Check save folder is selected.
 
 ---
+
+### ⚠️ Error:
+
+```
+Traceback (most recent call last):
+  File "XLStoJSON.py", line 5, in <module>
+ModuleNotFoundError: No module named 'pandas'
+```
+
+#### **Reason:**
+
+Missing dependencies (`pandas`, `openpyxl`, `pillow`)
+or PyInstaller didn’t include them in `.app`.
+
+#### **Solution:**
+
+##### 🧩 If running `.py`:
+
+```bash
+pip install pandas openpyxl pillow
+```
+
+##### 🍏 If running `.app` on macOS:
+
+Rebuild with dependencies:
+
+```bash
+pyinstaller --onedir --windowed \
+  --hidden-import pandas \
+  --hidden-import tkmacosx \
+  --hidden-import openpyxl \
+  --hidden-import pillow \
+  --icon=ico.png --clean XLStoJSON.py
+```
 
